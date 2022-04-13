@@ -1,0 +1,27 @@
+{% extends 'home/base.html' %}
+
+{% block title %}
+Login page!
+{% endblock title %}
+
+{% block body %}
+
+<div>
+    <h2>Login</h2>
+    <form action="{% url 'loginCheck' %}" method="post">
+        {% csrf_token %}
+        <label for="email"> Email: </label>  
+        <input type="email" name="email" placeholder="enter email" required> <br><br>
+        <label for="pwd"> Password: </label>  
+        <input type="password" name="pwd" placeholder="enter password" required> <br><br>
+        <button type="submit" >Submit</button>
+    </form>
+</div>
+
+<div>
+    {% if message %}
+        {{ message }}
+    {% endif %}
+</div>
+
+{% endblock body %}
