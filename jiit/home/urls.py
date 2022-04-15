@@ -4,8 +4,9 @@ from home import views
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('form', views.form, name='form'),
-    path('formDatabase', views.formDatabase, name='formDatabase'),
     path('login', views.login, name="login"),
-    path('loginCheck', views.loginCheck, name="loginCheck")
+    path('loginCheck', views.loginCheck, name="loginCheck"),
+    path('logout', views.logout, name='logout'),
+    path('signUp', views.signUp, name='signUp'),
+    path('signUpCheck', views.signUpCheck, name='signUpCheck'),
 ]

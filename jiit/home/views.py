@@ -1,4 +1,8 @@
+from atexit import register
+from sre_constants import SUCCESS
+from django.http import HttpResponse
 from django.shortcuts import render
+from requests import session
 import pyrebase
  
 configuration={
@@ -16,62 +20,100 @@ authe = firebase.auth()
 db=firebase.database()
 
 def index(request):
-    last_record = db.child('register').order_by_key().limit_to_last(1).get().val()
-    lr = str(list(last_record.keys())[0])
-    if not db.child('register').shallow().get().val():
-        data = {"fname": "user doesn't exist"}
+    context = {}
+
+    if "email" in request.session:
+        context["loggedIn"] = True
     else:
-        data = {
-            "fname": db.child('register').child(lr).child('first-name').get().val(),
-            "lname": db.child('register').child(lr).child('last-name').get().val(),
-            "email": db.child('register').child(lr).child('email').get().val(),
-            "phone": db.child('register').child(lr).child('phone').get().val(),
-            "password": db.child('register').child(lr).child('password').get().val()
-        }
+        context["loggedIn"] = False
 
-    return render(request, "home/index.html", data)
+    return render(request, "home/index.html", context)
 
-def form(request):
-    last_record = db.child('register').order_by_key().limit_to_last(1).get().val()
-    context = {"lastRecord": str(list(last_record.keys())[0])}
-    return render(request, "home/form.html", context)
-
-def formDatabase(request):
-    lastRecord = request.POST.get('lastRecord', False)
-    fname = request.POST.get('fname', False)
-    lname = request.POST.get('lname', False)
-    email = request.POST.get('email', False)
-    phone = request.POST.get('phone', False)
-    pwd = request.POST.get('pwd', False)
-    nextUser = int(lastRecord.split("user-", 1)[1])+1
-    newRecord = "user-"+str(nextUser)
-    db.child('register').child(newRecord)
-    data = {
-        "first-name": fname, 
-        "last-name": lname,
-        "email": email,
-        "phone": phone, 
-        "password": pwd
-    }
-    if db.set(data):
-        return render(request, "home/form.html", {"message": "success"})
-    
-    return render(request, "home/form.html", {"message": "failed"})
 
 def login(request):
-    return render(request, "home/login.html")
+
+    context = {}
+    if "email" in request.session:
+        context["loggedIn"] = True
+    else:
+        context["loggedIn"] = False
+
+    if "email" in request.session:
+        context["email"] = request.session['email']
+        return render(request, "home/success.html", context)
+
+    return render(request, "home/login.html", context)
 
 def loginCheck(request):
+    if "email" in request.session:
+        return render(request, "home/success.html", {"email": request.session['email']})
+
     email = request.POST['email']
     pwd = request.POST['pwd']
-    users = list(db.child('register').get().val().keys())
-    for user in users:
-        if email == db.child('register').child(user).child('email').get().val() and pwd == db.child('register').child(user).child('password').get().val():
-            context = {
-                "message": "Success"
+    try:
+        user = authe.sign_in_with_email_and_password(email, pwd)
+    except:
+        context = {"message": "Failed"}
+        return render(request, "home/login.html", context)
+    
+    request.session['userId'] = user['localId']
+    request.session['email'] = email
+    return render(request, "home/success.html", {"email": email, "loggedIn": True})
+
+def logout(request):
+    try:
+        del request.session['email']
+    except:
+        pass
+    return render(request,"home/login.html", {"message": "Logged Out!"})
+
+def signUp(request):
+    context = {}
+    if "email" in request.session:
+        context["loggedIn"] = True
+    else:
+        context["loggedIn"] = False
+
+    if "email" in request.session:
+        context["email"] = request.session['email']
+        return render(request, "home/success.html", context)
+
+    return render(request, "home/register.html")
+
+def signUpCheck(request):
+
+    context = {}
+    if "email" in request.session:
+        context["loggedIn"] = True
+    else:
+        context["loggedIn"] = False
+
+    if "email" in request.session:
+        context["email"] = request.session['email']
+        return render(request, "home/success.html", context)
+
+    if request.method != "POST":
+        return HttpResponse('No user data submitted!')
+
+    fname = request.POST.get('fname')
+    lname = request.POST.get('lname')
+    email = request.POST.get('email')
+    phone = request.POST.get('phone')
+    pwd = request.POST.get('pwd')
+    try:
+        user=authe.create_user_with_email_and_password(str(email), str(pwd))
+    except:
+        return render(request, "home/register.html", {"message": "Failed registration!"})
+    
+    db.child('register').child(user['localId']).child('basicDetails')
+    data = {
+            'first-name': fname,
+            'last-name': lname,
+            'phone': phone
             }
-        else:
-            context = {
-                "message": "Failed"
-            }
-    return render(request, "home/login.html", context)
+    if db.set(data):
+        return render(request,"home/login.html", {"message": "Registered successfully!"})
+
+    return render(request, "home/register.html", {"message": "Failed basic details!"})
+
+    

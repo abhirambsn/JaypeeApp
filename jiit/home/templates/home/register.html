@@ -8,9 +8,8 @@ Register page!
 
 <div>
     <h2>Register</h2>
-    <form action="{% url 'formDatabase' %}" method="post">
+    <form action="{% url 'signUpCheck' %}" method="post">
         {% csrf_token %}
-        <input type="hidden" name="lastRecord" value="{{ lastRecord }}">
         <label for="fname"> First name: </label> 
         <input type="text" name="fname" placeholder="enter first name" required> <br><br>
         <label for="lname"> Last name: </label> 
