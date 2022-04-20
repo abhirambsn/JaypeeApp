@@ -1,0 +1,49 @@
+{% extends 'registrar/base.html' %}
+
+{% block title %}
+Login !
+{% endblock title %}
+
+{% block body %}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 text-center">
+            <h2>Logged In!</h2>
+        </div>
+        <div class="col-12">
+            {% if loggedIn %}
+            <table class="table table-responsive">
+                <tr>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Phone Number</th>
+                    <th>Personal Details</th>
+                    <th>Contact Information</th>
+                    <th>Qualifications</th>
+                    <th>JEE Details</th>
+                    <th>Bank Details</th>
+                    <th>Uploads</th>
+                </tr>
+                <tr>
+                    {% for d in data %}
+                    <td>{{d.basicDetails.firstName}}</td>
+                    <td>{{d.basicDetails.lastName}}</td>
+                    <td>{{d.basicDetails.phone}}</td>
+                    <td>{{d.personalDetails}}</td>
+                    <td>{{d.contact}}</td>
+                    <td>{{d.qualifications}}</td>
+                    <td>{{d.jeeDetails}}</td>
+                    <td>{{d.bankDetails}}</td>
+                    <td>{{d.uploads}}</td>
+                    {% endfor %}
+                </tr>
+            </table>
+
+            {% endif %}
+        </div>
+        </div>
+    </div>
+</div>
+
+{% endblock body %}
